@@ -4,6 +4,9 @@
 /* === MODULE MANIFEST V2 ===
 module_description: 超级电容电源模块
 constructor_args:
+  - can_bus_name: "can1"
+  - task_stack_depth: 2048
+template_args: []
 required_hardware:
   - can
 depends: []
