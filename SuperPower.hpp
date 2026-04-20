@@ -143,14 +143,14 @@ class SuperPower : public LibXR::Application {
     if (TIME_SINCE_LAST_RX > OFFLINE_TIMEOUT_S) {
       online_ = false;
       chassis_power_ = 0.0f;
+      referee_power_ = 0.0f;
+      chassis_power_limit_ = 0.0f;
       cap_energy_ = 0;
       status_code_ = 0;
     } else {
       online_ = true;
+      SendCommand();
     }
-
-    /* 发送命令给超电 */
-    SendCommand();
   }
 
   /**
@@ -167,6 +167,8 @@ class SuperPower : public LibXR::Application {
     std::memcpy(&data, pack.data, sizeof(TxDataNew));
     status_code_ = data.status_code;
     chassis_power_ = DecodePower(data.chassis_power);
+    referee_power_ = DecodePower(data.referee_power);
+    chassis_power_limit_ = static_cast<float>(data.chassis_power_limit);
     cap_energy_ = data.cap_energy;
   }
 
@@ -175,6 +177,8 @@ class SuperPower : public LibXR::Application {
   float GetCapEnergy() { return static_cast<float>(cap_energy_) / 255.0f; }
 
   uint8_t GetStatusCode() { return status_code_; }
+
+  bool IsOnline() { return online_; }
 
   /* statusCode 位域解析 */
 
@@ -188,8 +192,6 @@ class SuperPower : public LibXR::Application {
   ErrorLevel GetErrorLevel() {
     return static_cast<ErrorLevel>(status_code_ & 0x03);
   }
-
-  bool IsOnline() { return online_; }
 
   void OnMonitor() override {}
 
@@ -209,6 +211,8 @@ class SuperPower : public LibXR::Application {
   LibXR::Thread thread_;
 
   float chassis_power_ = 0.0f;
+  float referee_power_ = 0.0f;
+  float chassis_power_limit_ = 0.0f;
   uint8_t cap_energy_ = 0;
   uint8_t status_code_ = 0;
 
