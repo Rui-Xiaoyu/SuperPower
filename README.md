@@ -1,6 +1,6 @@
 # SuperPower
 
-`SuperPower` 是主控侧的超级电容 CAN 通信模块，负责接收超电新格式反馈帧、同步裁判系统功率信息，并把控制帧发回超电控制板。
+`SuperPower` 是主控侧的超级电容 CAN 通信模块，负责接收 `0x052` 反馈帧、同步裁判系统功率信息，并把控制帧发回超电控制板。
 
 这个模块只做通信和状态缓存，不负责电机限幅计算，也不负责 UI 绘制。功率控制由 `PowerControl` 使用这里提供的实测功率、输出能力和在线状态完成。
 
@@ -53,7 +53,7 @@ struct __attribute__((packed)) StatusData {
 power_w = (static_cast<float>(encoded) - 16384.0f) / 64.0f;
 ```
 
-`cap_energy` 对外兼容旧接口 `GetCapEnergy()`，返回归一化后的 `cap_energy / 255.0f`。
+`cap_energy` 通过 `GetCapEnergy()` 以归一化比例对外提供，返回 `cap_energy / 255.0f`。
 
 ## 控制帧
 
@@ -77,12 +77,12 @@ struct __attribute__((packed)) CommandData {
 | 字段 | 当前写入 |
 |---|---|
 | `enable_dcdc` | 固定置 `1` |
-| `use_new_feedback_message` | 固定置 `1` |
+| `use_new_feedback_message` | 固定置 `1`，选择 `0x052` 反馈帧 |
 | `referee_power_limit` | `chassis_ref.rs.chassis_power_limit` |
 | `referee_energy_buffer` | `chassis_ref.power_buffer` |
 | 其他字段 | 默认 `0` |
 
-模块不单独开线程发送控制帧。收到有效反馈帧后，CAN 接收回调会检查距离上一次发送是否已经超过 `5 ms`，满足条件才发送一帧。构造完成时会强制发送一次控制帧，请求超电切到新反馈格式。
+模块不单独开线程发送控制帧。收到有效反馈帧后，CAN 接收回调会检查距离上一次发送是否已经超过 `5 ms`，满足条件才发送一帧。构造完成时会强制发送一次控制帧，请求超电使用 `0x052` 反馈帧。
 
 ## 在线判定
 
